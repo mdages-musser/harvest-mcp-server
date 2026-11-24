@@ -15,6 +15,19 @@ real token:
 | 3 | Make `npm run build` work on Windows (drop `chmod` or make it non-fatal) | Build fails under npm's default `cmd.exe` shell | One line |
 | 4 | Run over **stdio only**; never set `MCP_TRANSPORT=http` | HTTP mode listens on `0.0.0.0:3000` with no auth unless `MCP_API_KEY` is set | Config |
 
+## Changes applied (branch `fix/windows-mise`)
+
+| Change | Result |
+|---|---|
+| `npm audit fix` (no `--force`), lockfile only | axios 1.18.1 -> 1.21.1, follow-redirects 1.16.0 -> 1.16.3, MCP SDK 1.29.0 -> 1.32.2, hono, express sub-deps. Production advisories 11 -> 1 (zod, fix is zod 4 = `--force`, not applied). All 19 left are `--force`-only: zod plus 18 moderate in the jest 30 toolchain (dev only). 183/183 tests pass |
+| Build: `chmod +x` -> `node -e "require('fs').chmodSync('dist/index.js', 0o755)"` | `npm run build` exits 0 under PowerShell (cmd.exe) and under bash (`dist/index.js` mode 755) |
+| `mise.toml` tasks `build` (`npm ci`, `npm run build`) and `serve` (`node dist/index.js`) | `mise run build` exits 0 |
+| stdout check: `mise run -q -C <repo> serve` | Adds nothing to stdout. No token: exit 1, 0 bytes stdout, env error on stderr. Dummy token: stdout is only JSON-RPC (`initialize` + `tools/list` = 54 tools, 0 non-JSON lines); stderr holds only the server's own log lines. Fallback if ever needed: `mise exec -C <repo> -- node dist/index.js` |
+
+- A fresh clone needs `mise trust` once before `mise run` will read `mise.toml`.
+- `npm run clean` still uses `rm -rf` and fails under cmd.exe; unused by build or serve, left as is.
+- Items 2 and 4 of the verdict table still stand (write gating, stdio only).
+
 ## 1. Network
 
 | Host | Where | Notes |
