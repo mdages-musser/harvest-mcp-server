@@ -1,2 +1,6 @@
 [tools]
 node = "26.13.0"
+
+[tasks]
+build = ["npm ci", "npm run build"]
+serve = "node dist/index.js"
